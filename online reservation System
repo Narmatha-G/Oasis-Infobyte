@@ -1,0 +1,160 @@
+import java.util.*;
+
+public class Main {
+    static Scanner scanner = new Scanner(System.in);
+
+    static Map<String, String> users = new HashMap<>(); // username -> password
+    static Map<Integer, Train> trains = new HashMap<>(); // trainNumber -> Train object
+    static Map<String, Reservation> reservations = new HashMap<>(); // PNR -> Reservation object
+
+    public static void main(String[] args) {
+        users.put("admin", "password");
+        trains.put(101, new Train(101, "Express", 50));
+        trains.put(102, new Train(102, "Intercity", 40));
+
+        System.out.println("Welcome to the Online Reservation System!");
+
+        boolean exit = false;
+        while (!exit) {
+            System.out.println("\n1. Login");
+            System.out.println("2. Exit");
+            System.out.print("Enter your choice: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); 
+
+            switch (choice) {
+                case 1 -> login();
+                case 2 -> exit = true;
+                default -> System.out.println("Invalid choice. Try again.");
+            }
+        }
+        System.out.println("Thank you for using the Online Reservation System!");
+    }
+
+    static void login() {
+        System.out.print("Enter username: ");
+        String username = scanner.nextLine();
+        System.out.print("Enter password: ");
+        String password = scanner.nextLine();
+
+        if (users.containsKey(username) && users.get(username).equals(password)) {
+            System.out.println("Login successful!");
+            showMenu();
+        } else {
+            System.out.println("Invalid credentials. Try again.");
+        }
+    }
+
+    static void showMenu() {
+        boolean back = false;
+        while (!back) {
+            System.out.println("\n1. Make a Reservation");
+            System.out.println("2. Cancel a Reservation");
+            System.out.println("3. View All Reservations");
+            System.out.println("4. Logout");
+            System.out.print("Enter your choice: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (choice) {
+                case 1 -> makeReservation();
+                case 2 -> cancelReservation();
+                case 3 -> viewReservations();
+                case 4 -> back = true;
+                default -> System.out.println("Invalid choice. Try again.");
+            }
+        }
+    }
+
+    static void makeReservation() {
+        System.out.print("Enter Name: ");
+        String name = scanner.nextLine();
+        System.out.print("Enter Train Number: ");
+        int trainNumber = scanner.nextInt();
+        scanner.nextLine(); 
+        System.out.print("Enter Date of Journey (DD-MM-YYYY): ");
+        String journeyDate = scanner.nextLine();
+        System.out.print("Enter From Station: ");
+        String from = scanner.nextLine();
+        System.out.print("Enter To Station: ");
+        String to = scanner.nextLine();
+
+        if (trains.containsKey(trainNumber)) {
+            Train train = trains.get(trainNumber);
+            if (train.availableSeats > 0) {
+                String pnr = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+                Reservation reservation = new Reservation(pnr, name, trainNumber, train.trainName, journeyDate, from, to);
+                reservations.put(pnr, reservation);
+                train.availableSeats--;
+                System.out.println("Reservation successful! Your PNR: " + pnr);
+            } else {
+                System.out.println("No seats available on this train.");
+            }
+        } else {
+            System.out.println("Invalid train number.");
+        }
+    }
+
+    static void cancelReservation() {
+        System.out.print("Enter PNR Number: ");
+        String pnr = scanner.nextLine();
+
+        if (reservations.containsKey(pnr)) {
+            Reservation reservation = reservations.get(pnr);
+            reservations.remove(pnr);
+            Train train = trains.get(reservation.trainNumber);
+            train.availableSeats++;
+            System.out.println("Reservation canceled successfully for PNR: " + pnr);
+        } else {
+            System.out.println("Invalid PNR number.");
+        }
+    }
+
+    static void viewReservations() {
+        if (reservations.isEmpty()) {
+            System.out.println("No reservations found.");
+        } else {
+            System.out.println("\nAll Reservations:");
+            for (Reservation reservation : reservations.values()) {
+                System.out.println(reservation);
+            }
+        }
+    }
+}
+
+class Train {
+    int trainNumber;
+    String trainName;
+    int availableSeats;
+
+    Train(int trainNumber, String trainName, int availableSeats) {
+        this.trainNumber = trainNumber;
+        this.trainName = trainName;
+        this.availableSeats = availableSeats;
+    }
+}
+
+class Reservation {
+    String pnr;
+    String passengerName;
+    int trainNumber;
+    String trainName;
+    String journeyDate;
+    String from;
+    String to;
+
+    Reservation(String pnr, String passengerName, int trainNumber, String trainName, String journeyDate, String from, String to) {
+        this.pnr = pnr;
+        this.passengerName = passengerName;
+        this.trainNumber = trainNumber;
+        this.trainName = trainName;
+        this.journeyDate = journeyDate;
+        this.from = from;
+        this.to = to;
+    }
+
+    @Override
+    public String toString() {
+        return "PNR: " + pnr + ", Name: " + passengerName + ", Train: " + trainName + " (" + trainNumber + "), Date: " + journeyDate + ", From: " + from + ", To: " + to;
+    }
+}
